@@ -53,7 +53,7 @@ filtered_means, filtered_vars = kalman_filter(log_squared_returns, initial_state
 initial_guess = [B, a, c, H, phi, Q]
 bounds = [(0.8, 1.2), (-0.5, 0.5), (-0.5, 0.5), (0.05, 0.5), (0.9, 0.99), (0.005, 0.1)]
 
-# Optimize Parameters
+# Optimize Parameters (theta_hat optimized parameters)
 optimized_parameters = minimize(mle_wrapper, initial_guess, args=(log_squared_returns,), method='L-BFGS-B',
                                 bounds=bounds)
 theta_hat = optimized_parameters.x
