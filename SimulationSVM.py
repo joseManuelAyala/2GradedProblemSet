@@ -60,13 +60,11 @@ bounds = [(0.8, 1.2), (-0.5, 0.5), (-0.5, 0.5), (0.05, 0.5), (0.9, 0.99), (0.005
 optimized_parameters = minimize(mle_wrapper, initial_guess, args=(log_squared_returns,), method='L-BFGS-B',
                                 bounds=bounds)
 theta_hat = optimized_parameters.x
-print(theta_hat)
 
 # Call Kalman Filter with estimated parameters
 B_hat, a_hat, c_hat, H_hat, phi_hat, Q_hat = theta_hat
 filtered_means_mle, filtered_vars_mle = kalman_filter(log_squared_returns, initial_state_mean, initial_state_var,
                                                       B_hat, H_hat, a_hat, c_hat, phi_hat, Q_hat)
-
 
 # Fit EGARCH(1,1) Model to the normal returns (not the log-squared ones)
 model = arch_model(r, vol='EGARCH', p=1, q=1, dist='normal')
@@ -181,4 +179,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# Plot the coverage ratio
+# Print results
+print("EGARCH(1,1) parameter estimates:\n", res.params)
+print(f"\nKF VaR coverage = {100*coverage_kalman:.2f}% (expected {alpha*100}%)")
+print(f"EGARCH VaR coverage = {100*coverage_egarch:.2f}% (expected {alpha*100}%)")
