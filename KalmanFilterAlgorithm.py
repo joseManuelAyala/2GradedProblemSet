@@ -1,37 +1,46 @@
 import numpy as np
 
+def kalman_filter(y, a, B, Phi, H, Q, a1, P1, return_loglike=False):
 
+    T = len(y)
 
-def kalman_filter(training_set, initial_state_mean, initial_state_var, B, H, a, c, phi, Q):
-    T = len(training_set)
+    # Output arrays
+    filtered_means = np.zeros(T)
+    filtered_vars = np.zeros(T)
+    prior_means = np.zeros(T)
+    prior_vars = np.zeros(T)
 
-    # Initialize Kalman Filter with Expert Knowledge
-    predicted_mean = initial_state_mean
-    predicted_var = initial_state_var
+    prior_means[0] = a1
+    prior_vars[0] = P1
 
-    # Output Arrays
-    filtered_state_means = np.zeros(T)
-    filtered_state_vars = np.zeros(T)
+    # Initialize likelihood function
+    log_likelihood = 0
 
     for t in range(T):
 
-        # Kalman Gain
-        k = predicted_var * B / (B * predicted_var * B + H)
+        # Prediction error variance
+        F_t = B * prior_vars[t] * B + H
 
-        # Prediction Error
-        v_t = training_set[t] - (a + B * predicted_mean)
+        # Kalman gain
+        K_t = (prior_vars[t] * B) / F_t
 
-        # Update posterior for alpha_t
-        updated_mean = predicted_mean + k * v_t
-        updated_var = (1 - k * B) * predicted_var
+        # Prediction error
+        v_t = y[t] - (a + B * prior_means[t])
 
-        # Save estimations in arrays
-        filtered_state_means[t] = updated_mean
-        filtered_state_vars[t] = updated_var
+        # Update log_likelihood function
+        log_likelihood += -0.5 * (np.log(2 * np.pi) + np.log(F_t) + (v_t ** 2) / F_t)
 
-        # Predict next state alpha_t+1
-        predicted_mean = c + phi * updated_mean
-        predicted_var = phi * updated_var * phi + Q
+        # Update and store posterior means and variances
+        filtered_means[t] = prior_means[t] + K_t * v_t
+        filtered_vars[t] = prior_vars[t] *  (1 - K_t * B)
 
-    # Return with Kalman Filter filtered means and variances
-    return filtered_state_means, filtered_state_vars
+        # Update time, if it is not final step
+        if t < T - 1:
+            prior_means[t + 1] = Phi * filtered_means[t]
+            prior_vars[t + 1] = (Phi**2) * filtered_vars[t] + Q
+
+
+    if return_loglike:
+        return -log_likelihood
+    else:
+        return filtered_means, filtered_vars, prior_means, prior_vars

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.stats import norm
 from KalmanFilterAlgorithm import kalman_filter
-from MLE import mle_wrapper
+from MLE import kalman_filter_objfcn
 from arch import arch_model
 from coverage_ratio import coverage_ratio
 
@@ -12,9 +12,9 @@ np.random.seed(1234)
 T = 2500
 
 # Define SV parameters
-phi = 0.95
-sigma_eta = 0.2
-sigma = 1.0
+phi = 0.9
+sigma_eta = 0.3
+sigma = 1.2
 
 # Array for hidden volatility values (log-volatility)
 h_true = np.zeros(T)
@@ -37,7 +37,7 @@ log_squared_returns = np.log(r**2 + 1e-6)
 
 # Define Parameters for the Kalman Filter
 a = 0
-B = 1
+B = 1.0
 H = 0.2
 
 c = 0
@@ -47,24 +47,33 @@ initial_state_mean = 0
 initial_state_var = 1
 
 # Call Kalman Filter
-filtered_means, filtered_vars = kalman_filter(log_squared_returns, initial_state_mean,
-                                              initial_state_var, B, H, a, c, phi, Q)
+filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, phi, H, Q,
+                                              initial_state_mean, initial_state_var )
 
 
 # Minimize log_likelihood Function
-
-initial_guess = [B, a, c, H, phi, Q]
-bounds = [(0.8, 1.2), (-0.5, 0.5), (-0.5, 0.5), (0.05, 0.5), (0.9, 0.99), (0.005, 0.1)]
+initial_guess = [phi, sigma_eta, sigma]
+bounds = [(0.001, 0.999), (1e-6, None), (1e-6, None)]
 
 # Optimize Parameters (theta_hat optimized parameters)
-optimized_parameters = minimize(mle_wrapper, initial_guess, args=(log_squared_returns,), method='L-BFGS-B',
+optimized_parameters = minimize(kalman_filter_objfcn, initial_guess, args=(log_squared_returns,), method='L-BFGS-B',
                                 bounds=bounds)
 theta_hat = optimized_parameters.x
 
+
 # Call Kalman Filter with estimated parameters
-B_hat, a_hat, c_hat, H_hat, phi_hat, Q_hat = theta_hat
-filtered_means_mle, filtered_vars_mle = kalman_filter(log_squared_returns, initial_state_mean, initial_state_var,
-                                                      B_hat, H_hat, a_hat, c_hat, phi_hat, Q_hat)
+phi_hat, sigma_eta_hat, sigma_hat = theta_hat
+a_hat = sigma_hat
+c_hat = 0.0
+H_hat = np.pi ** 2 / 2
+Q_hat = sigma_eta_hat**2
+filtered_means_mle, filtered_vars_mle, _, _ = kalman_filter(log_squared_returns, a_hat, B, phi_hat, H_hat, Q_hat,
+                                                      initial_state_mean, initial_state_var)
+
+print("Estimated parameters (MLE):")
+print(f"phi_hat = {phi_hat}")
+print(f"sigma_eta_hat = {sigma_eta_hat}")
+print(f"sigma_hat (mu_hat) = {sigma_hat}")
 
 # Fit EGARCH(1,1) Model to the normal returns (not the log-squared ones)
 model = arch_model(r, vol='EGARCH', p=1, q=1, dist='normal')

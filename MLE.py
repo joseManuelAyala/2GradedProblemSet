@@ -1,40 +1,22 @@
 import numpy as np
+from KalmanFilterAlgorithm import kalman_filter
 
 # Computes log_likelihood Function with Kalman Filter Algorithm
-def mle(training_set, B, a, c, H, phi, Q):
+# (Theta are the parameters to optimize and y is the training set)
+def kalman_filter_objfcn(theta, y):
 
-    T = len(training_set)
-    log_likelihood = - (T / 2) * np.log(2 * np.pi)
-    predicted_mean = 0
-    predicted_var = 1
+    # Unpack the parameters
+    phi, sigma_eta, mu = theta
 
-    for t in range(T):
-        # Predict observation y_t
-        y_mean = a + B * predicted_mean
-        y_var = B * predicted_var * B + H
+    # Derived parameters
+    a = 2 * np.log(mu)
+    B = 1
+    H = np.pi ** 2 / 2
+    Q = sigma_eta ** 2
 
-        # Prediction error
-        v_t = training_set[t] - y_mean
-
-        # Update log_likelihood Function
-        log_likelihood -= 0.5 * np.log(y_var)
-        log_likelihood -= 0.5 * (v_t**2) / y_var
-
-        # Update Kalman Gain
-        k_t = predicted_var * B / y_var
-
-        # Update posterior for alpha_t
-        updated_mean = predicted_mean + k_t * v_t
-        updated_var = (1 - k_t * B) * predicted_var
-
-        # Predict next state alpha_t+1
-        predicted_mean = c + phi * updated_mean
-        predicted_var = phi * updated_var * phi + Q
+    a1 = 0.0
+    P1 = Q / (1 - phi ** 2) if abs(phi) < 1 else 1.0
 
     # Returns negative log_likelihood Function, because we minimize
-    return -log_likelihood
+    return kalman_filter(y, a, B, phi, H, Q, a1, P1, return_loglike=True)
 
-
-def mle_wrapper(parameters, training_set):
-    B, a, c, H, phi, Q = parameters
-    return mle(training_set, B, a, c, H, phi, Q)
