@@ -12,23 +12,23 @@ np.random.seed(1234)
 T = 2500
 
 # Define SV parameters
-phi = 0.9
-sigma_eta = 0.3
-sigma = 1.2
+volatility_persistence= 0.95
+vol_vol = 0.2
+vol = - (vol_vol ** 2) / (2 * (1 - volatility_persistence ** 2))
 
 # Array for hidden volatility values (log-volatility)
 h_true = np.zeros(T)
 
 # Start from the stationary distribution of the AR(1)
-h_true[0] = np.random.normal(loc=0, scale=sigma_eta / np.sqrt(1 - phi**2))
+h_true[0] = np.random.normal(loc=vol, scale=vol_vol / np.sqrt(1 - volatility_persistence ** 2))
 
 for t in range(1, T):
-    h_true[t] = phi * h_true[t-1] + np.random.normal(0, sigma_eta)
+    h_true[t] = vol + volatility_persistence * h_true[t - 1] + np.random.normal(0, vol_vol)
 
 # Returns (mean zero)
 
 xi = np.random.normal(0, 1, T)
-r = sigma * np.exp(0.5 * h_true) * xi
+r = np.exp(0.5 * h_true) * xi
 
 # Apply Kalman Filter
 
@@ -41,17 +41,20 @@ B = 1.0
 H = 0.2
 
 c = 0
-Q = sigma_eta**2
+Q = vol_vol ** 2
 
 initial_state_mean = 0
 initial_state_var = 1
 
 # Call Kalman Filter
-filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, phi, H, Q,
-                                              initial_state_mean, initial_state_var )
+filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, volatility_persistence, H, Q,
+                                                    initial_state_mean, initial_state_var)
 
 
 # Minimize log_likelihood Function
+phi = 0.9
+sigma_eta = 0.3
+sigma = 1.2
 initial_guess = [phi, sigma_eta, sigma]
 bounds = [(0.001, 0.999), (1e-6, None), (1e-6, None)]
 
