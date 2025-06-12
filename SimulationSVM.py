@@ -55,8 +55,8 @@ filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, v
 phi = 0.9
 sigma_eta = 0.3
 sigma = 1.2
-initial_guess = [phi, sigma_eta, sigma]
-bounds = [(0.001, 0.999), (1e-6, None), (1e-6, None)]
+initial_guess = [0.9, 0.3]
+bounds = [(0.001, 0.999), (1e-6, None)]
 
 # Optimize Parameters (theta_hat optimized parameters)
 optimized_parameters = minimize(kalman_filter_objfcn, initial_guess, args=(log_squared_returns,), method='L-BFGS-B',
@@ -65,8 +65,8 @@ theta_hat = optimized_parameters.x
 
 
 # Call Kalman Filter with estimated parameters
-phi_hat, sigma_eta_hat, sigma_hat = theta_hat
-a_hat = sigma_hat
+phi_hat, sigma_eta_hat = theta_hat
+a_hat = -1.27
 c_hat = 0.0
 H_hat = np.pi ** 2 / 2
 Q_hat = sigma_eta_hat**2
@@ -76,7 +76,6 @@ filtered_means_mle, filtered_vars_mle, _, _ = kalman_filter(log_squared_returns,
 print("Estimated parameters (MLE):")
 print(f"phi_hat = {phi_hat}")
 print(f"sigma_eta_hat = {sigma_eta_hat}")
-print(f"sigma_hat (mu_hat) = {sigma_hat}")
 
 # Fit EGARCH(1,1) Model to the normal returns (not the log-squared ones)
 model = arch_model(r, vol='EGARCH', p=1, q=1, dist='normal')
