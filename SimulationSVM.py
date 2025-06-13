@@ -36,15 +36,15 @@ r = np.exp(0.5 * h_true) * xi
 log_squared_returns = np.log(r**2 + 1e-6)
 
 # Define Parameters for the Kalman Filter
-a = 0
+a = -1.2704
 B = 1.0
-H = 0.2
+H = np.pi**2 / 2
 
 c = 0
 Q = vol_vol ** 2
 
 initial_state_mean = 0
-initial_state_var = 1
+initial_state_var = Q / (1 - volatility_persistence ** 2)
 
 # Call Kalman Filter
 filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, volatility_persistence, H, Q,
