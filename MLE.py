@@ -4,7 +4,7 @@ from KalmanFilterAlgorithm import kalman_filter
 # Computes log_likelihood Function with Kalman Filter Algorithm
 # (Theta are the parameters to optimize and y is the training set)
 def kalman_filter_objfcn(theta, y):
-    phi, sigma_eta = theta  
+    phi, sigma_eta = theta
     a = -1.2704
     B = 1.0
     H = np.pi**2 / 2

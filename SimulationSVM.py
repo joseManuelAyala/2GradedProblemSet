@@ -73,9 +73,6 @@ Q_hat = sigma_eta_hat**2
 filtered_means_mle, filtered_vars_mle, _, _ = kalman_filter(log_squared_returns, a_hat, B, phi_hat, H_hat, Q_hat,
                                                       initial_state_mean, initial_state_var)
 
-print("Estimated parameters (MLE):")
-print(f"phi_hat = {phi_hat}")
-print(f"sigma_eta_hat = {sigma_eta_hat}")
 
 # Fit EGARCH(1,1) Model to the normal returns (not the log-squared ones)
 model = arch_model(r, vol='EGARCH', p=1, q=1, dist='normal')
@@ -190,7 +187,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# Print results
+# Print results of coverage ratio
 print("EGARCH(1,1) parameter estimates:\n", res.params)
 print(f"\nKF VaR coverage = {100*coverage_kalman:.2f}% (expected {alpha*100}%)")
 print(f"EGARCH VaR coverage = {100*coverage_egarch:.2f}% (expected {alpha*100}%)")
