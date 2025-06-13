@@ -55,7 +55,7 @@ filtered_means, filtered_vars, _, _ = kalman_filter(log_squared_returns, a, B, v
 phi = 0.9
 sigma_eta = 0.3
 sigma = 1.2
-initial_guess = [0.9, 0.3]
+initial_guess = [phi, sigma_eta]
 bounds = [(0.001, 0.999), (1e-6, None)]
 
 # Optimize Parameters (theta_hat optimized parameters)
