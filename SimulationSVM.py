@@ -87,18 +87,23 @@ egarch_log_volatility = np.log(egarch_volatility ** 2)
 # Convert volatility estimates for Kalman(MLE) and EGARCH
 kalman_sigma = np.exp(0.5 * filtered_means_mle)
 
-# VaR and ES Parameters
-alpha = 0.01
-z_alpha = norm.ppf(alpha)
-phi_z = norm.pdf(z_alpha)
+# Alpha Parameter
+alpha = 0.05
+
+# VaR_ES function to compute the values of Kalman and EGARCH
+def VaR_ES(volatility_series, alpha):
+    z_alpha = norm.ppf(alpha)
+    phi_z = norm.pdf(z_alpha)
+    VaR = z_alpha * volatility_series
+    ES = - (phi_z / alpha) * volatility_series
+    return VaR, ES
+
 
 # VaR and ES for Kalman approach
-VaR_kalman = z_alpha * kalman_sigma
-ES_kalman = - (phi_z / alpha) * kalman_sigma
+VaR_kalman, ES_kalman = VaR_ES(kalman_sigma, alpha)
 
 # VaR and ES for EGARCH approach
-VaR_egarch = z_alpha * egarch_volatility
-ES_egarch = - (phi_z / alpha) * egarch_volatility
+VaR_egarch, ES_egarch = VaR_ES(egarch_volatility, alpha)
 
 # Compute coverage ratios
 coverage_kalman = coverage_ratio(r, VaR_kalman)
